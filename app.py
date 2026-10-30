@@ -37,13 +37,11 @@ def load_and_merge_data():
     try:
         df_jml_cek = pd.read_sql("SELECT name FROM sqlite_master WHERE type='table' AND name='tabel_jumlah_miskin'", engine_sqlite)
         if df_jml_cek.empty:
-            # Jika tabel belum ada di SQLite lokal cloud, buat secara otomatis dari file CSV
             df_umk = pd.read_csv("od_19868_daftar_upah_minimum_kabupatenkota_di_drh_prov_jaba_v2.csv")
             df_garis = pd.read_csv("od_20003_garis_kemiskinan_berdasarkan_kabupatenkota_v2.csv")
             df_jml = pd.read_csv("od_16425_jumlah_penduduk_miskin_berdasarkan_kabupatenkota_v1.csv")
             df_kedalaman = pd.read_csv("od_18026_indeks_kedalaman_kemiskinan_berdasarkan_kabupatenkota.csv")
             
-            # Masukkan ke database
             df_umk.to_sql("tabel_umk", engine_pg, if_exists="replace", index=False)
             df_garis.to_sql("tabel_garis_kemiskinan", engine_pg, if_exists="replace", index=False)
             df_jml.to_sql("tabel_jumlah_miskin", engine_sqlite, if_exists="replace", index=False)
@@ -51,18 +49,17 @@ def load_and_merge_data():
     except Exception as e:
         pass
 
-    # Tarik Data dari kedua DBMS
-    df_umk = pd.read_sql("SELECT * FROM tabel_umk", engine_pg)
-    df_garis = pd.read_sql("SELECT * FROM tabel_garis_kemiskinan", engine_pg)
-    df_jml = pd.read_sql("SELECT * FROM tabel_jumlah_miskin", engine_sqlite)
-    df_kedalaman = pd.read_sql("SELECT * FROM tabel_kedalaman_kemiskinan", engine_sqlite)
+    # Tarik Data dan HANYA ambil kolom kunci serta kolom nilai utamanya saja
+    df_umk = pd.read_sql("SELECT nama_kabupaten_kota, tahun, besaran_upah_minimum FROM tabel_umk", engine_pg)
+    df_garis = pd.read_sql("SELECT nama_kabupaten_kota, tahun, garis_kemiskinan FROM tabel_garis_kemiskinan", engine_pg)
+    df_jml = pd.read_sql("SELECT nama_kabupaten_kota, tahun, jumlah_penduduk_miskin FROM tabel_jumlah_miskin", engine_sqlite)
+    df_kedalaman = pd.read_sql("SELECT nama_kabupaten_kota, tahun, indeks_kedalaman_kemiskinan FROM tabel_kedalaman_kemiskinan", engine_sqlite)
     
-    # Penggabungan Data (Data Federation)
-    df_merged = pd.merge(df_umk, df_garis, on=['nama_kabupaten_kota', 'tahun'], suffixes=('', '_drop'))
-    df_merged = pd.merge(df_merged, df_jml, on=['nama_kabupaten_kota', 'tahun'], suffixes=('', '_drop'))
-    df_merged = pd.merge(df_merged, df_kedalaman, on=['nama_kabupaten_kota', 'tahun'], suffixes=('', '_drop'))
+    # Penggabungan Data (Data Federation) yang aman tanpa duplikasi kolom
+    df_merged = pd.merge(df_umk, df_garis, on=['nama_kabupaten_kota', 'tahun'])
+    df_merged = pd.merge(df_merged, df_jml, on=['nama_kabupaten_kota', 'tahun'])
+    df_merged = pd.merge(df_merged, df_kedalaman, on=['nama_kabupaten_kota', 'tahun'])
     
-    df_merged = df_merged.loc[:, ~df_merged.columns.str.endswith('_drop')]
     df_merged['tahun'] = df_merged['tahun'].astype(int) 
     
     # Format Nama Wilayah
