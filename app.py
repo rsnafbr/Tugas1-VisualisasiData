@@ -25,7 +25,8 @@ st.markdown('<div class="main-header"> Dashboard Ekonomi & Kemiskinan Jawa Barat
 st.markdown('<div class="sub-header">Integrasi Data: PostgreSQL (Cloud) & SQLite (Lokal)</div>', unsafe_allow_html=True)
 
 # --- KONEKSI DATABASE & PENGAMBILAN DATA ---
-POSTGRES_URL = "postgresql://postgres.xzsnkcrytszyfrzojzfs:rsnafbr0702@aws-0-eu-west-1.pooler.supabase.com:6543/postgres"
+# Memanggil URL secara aman dari sistem rahasia Streamlit Cloud
+POSTGRES_URL = st.secrets["POSTGRES_URL"]
 SQLITE_URL = "sqlite:///data_analitik.db"
 
 @st.cache_data(ttl=600)
