@@ -6,7 +6,6 @@ import plotly.express as px
 # --- KONFIGURASI HALAMAN ---
 st.set_page_config(
     page_title="Dashboard Ekonomi & Kemiskinan Jabar",
-    page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -26,7 +25,7 @@ st.markdown('<div class="sub-header">Integrasi Data: PostgreSQL (Cloud) & SQLite
 
 # --- KONEKSI DATABASE & PENGAMBILAN DATA ---
 # Memanggil URL secara aman dari sistem rahasia Streamlit Cloud
-POSTGRES_URL = st.secrets["POSTGRES_URL"]
+POSTGRES_URL = "postgresql+psycopg2://postgres.xzsnkcrytszyfrzojzfs:rsnafbr0702@aws-0-eu-west-1.pooler.supabase.com:6543/postgres"
 SQLITE_URL = "sqlite:///data_analitik.db"
 
 @st.cache_data(ttl=600)
